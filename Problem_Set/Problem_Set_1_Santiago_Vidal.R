@@ -1,0 +1,125 @@
+---
+title: "Problem Set 1"
+author: "Santiago Vidal"
+date: "`October 23, 2025`"
+output: html_document
+---
+
+  
+  
+  ------
+  # Simulation Portion
+  ------
+# Set seed for reproducibility
+set.seed(123)
+
+# Define population trait distribution
+traits <- c("A", "B", "C")
+pop_probs <- c(0.2, 0.5, 0.3)
+
+# Function to simulate one round
+simulate_once <- function(n) {
+  sample_traits <- sample(traits, n, replace = TRUE, prob = pop_probs)
+  group <- sample(c("Treatment", "Control"), n, replace = TRUE)
+  
+  sample_prop <- prop.table(table(sample_traits))
+  group_prop <- prop.table(table(sample_traits, group), margin = 2)
+  
+  list(sample = sample_prop, group = group_prop)
+}
+
+# Small sample simulation (n = 30)
+sim_30 <- simulate_once(30)
+print(sim_30$sample)
+print(sim_30$group)
+
+# Large sample simulation (n = 1000)
+sim_1000 <- simulate_once(1000)
+print(sim_1000$sample)
+print(sim_1000$group)
+  
+  ------
+  # Data Analysis Portion
+  ------
+# Load voting.csv from your Desktop R folder
+voting <- read.csv("/Users/santividal5/Desktop/R/voting.csv")
+
+# 1. What is the treatment variable? Is it a discrete or continuous variable? What is the variable’s data type?
+
+# The treatment variable is 'message'
+# > It shows whether the person received the social pressure message ("yes" or "no")
+# > This is a discrete variable (two categories)
+# > The data type is a 'character'
+
+class(voting$message)
+
+------
+# 2. Create a new treatment variable in your data frame that is a binary version of the existing treatment variable. 
+# > Your new variable should equal 1 if the observation was treated, and 0 otherwise.
+
+# Create a binary version of the treatment variable
+# 1 if message == "yes", 0 if message == "no"
+voting$treat_binary <- ifelse(voting$message == "yes", 1, 0)
+
+# Check the result
+head(voting)
+
+------
+# 3. Compute the average outcome for the treatment group and the average outcome for
+# > the control group. Interpret the results by writing 1-2 sentences about what these
+# > numbers mean substantively.
+
+# Average voting rate (outcome) for treatment group
+mean(voting$voted[voting$treat_binary == 1])  # Treated group
+
+# Average voting rate for control group
+mean(voting$voted[voting$treat_binary == 0])  # Control group
+
+# This tells us how many people voted in each group on average. 
+# > For example, if treated = 0.378 and control = 0.297, 
+# > then treated voters turned out about 8.1 percentage points more than the control group.
+
+------
+# 4. Use brackets to subset the data frame and create two new data frames, one for the
+# > treatment group and one for the control group.
+
+# Create two new data frames using bracket notation
+treatment_group <- voting[voting$treat_binary == 1, ]
+control_group <- voting[voting$treat_binary == 0, ]
+
+# Check their sizes
+nrow(treatment_group)
+nrow(control_group)
+
+------
+# 5. What is the average birth year for the treatment and control groups?
+
+# Average birth year of treated voters
+mean(treatment_group$birth)
+
+# Average birth year of control voters
+mean(control_group$birth)
+
+------
+# 6. What is the estimated average causal eLect for this experiment? Provide the
+# > calculated average eLect and a substantive interpretation.
+
+# ATE = difference in average outcomes between treatment and control
+ate <- mean(treatment_group$voted) - mean(control_group$voted)
+ate
+
+# If ate = 0.08130991, then the message increased voter turnout by about 8.139 percentage points.
+
+------
+# 7. Suppose we wanted to claim that the estimated causal eLect is an estimated eLect
+  # for the entire U.S. population. What assumption would need to hold for us to make
+  # > this claim?
+
+# To generalize this effect to the U.S. population,
+# we need to assume external validity:
+# The sample and treatment effect must be representative of the broader population.
+
+# > The assumption is that the experimental sample and context are similar enough to the general U.S. voting population
+# > that the same treatment effect would apply.
+
+
