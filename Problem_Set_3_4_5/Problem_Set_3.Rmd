@@ -1,0 +1,544 @@
+---
+title: "Problem Set 3"
+author: "Santiago Vidal Calvo"
+date: "2025-12-07"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r Part 1}
+# Question 1: Research Goals
+
+# Is the goal of the study causal inference, description, prediction, or
+
+# > something else? Have the authors clearly stated their goals? Describe
+
+# > any strengths or weaknesses in how the authors articulate their
+
+# > research objectives.
+
+#
+
+# Answer 1:
+
+# The main goal of Fearon and Laitin's study is to explain why civil wars
+
+# > occur where and when they do, rather than just describing patterns or
+
+# > predicting future conflicts.
+
+# They compare different explanations for civil war, especially the idea
+
+# > that ethnic and religious diversity causes conflict versus the idea
+
+# > that conditions favoring insurgency (like poverty and weak states)
+
+# > matter more.
+
+# So their goal is essentially causal inference about the determinants of
+
+# > civil war onset, even though they do not use modern causal language.
+
+# The authors clearly say they are challenging the "ethnic conflict"
+
+# > conventional wisdom, which makes their objective easy to understand,
+
+# > but they do not formally define a causal estimand in the way newer
+
+# > papers sometimes do.
+
+# Question 2: Estimands
+
+# Have the authors sufficiently defined their theoretical and empirical
+
+# > estimands? Discuss what these estimands are and explain how the
+
+# > authors could clarify them if necessary.
+
+#
+
+# Answer 2:
+
+# The paper does not use the word "estimand," but we can infer what they
+
+# > care about.
+
+# The theoretical estimand is basically the causal effect of changing a
+
+# > country's characteristics (income, state capacity, ethnic diversity,
+
+# > terrain, population, etc.) on the probability of a civil war beginning.
+
+# The empirical estimands are the coefficients in their logit regressions,
+
+# > which they treat as estimates of how each variable changes the log
+
+# > odds of civil war onset, holding the others constant.
+
+# They could be clearer by stating explicitly which causal effect each
+
+# > coefficient is supposed to represent, and by separating descriptive
+
+# > patterns from the causal parameters they hope to learn about.
+
+# Question 3: Identification Strategy
+
+# The way you connect your theoretical estimand to your empirical
+
+# > estimand is known as identification—in other words, what does the
+
+# > research do to ensure that the empirical estimand is a good measure
+
+# > of the theoretical estimand? Describe the authors' identification
+
+# > strategy.
+
+#
+
+# Answer 3:
+
+# Since the data are observational, Fearon and Laitin rely on regression
+
+# > with control variables as their identification strategy.
+
+# They include many potential confounders, like income, regime type,
+
+# > mountains, population, political instability, oil exports, and
+
+# > whether a state is new.
+
+# The idea is that once these controls are in the model, the coefficient
+
+# > on a variable like income can be interpreted as the causal effect of
+
+# > income on civil war risk.
+
+# In other words, they assume that controlling for this long list of
+
+# > variables removes important sources of bias.
+
+# They do not use tools like natural experiments or instrumental
+
+# > variables, so the identification argument depends heavily on the
+
+# > assumption that there are no major omitted confounders and that the
+
+# > functional form of the model is appropriate.
+
+# Question 4: Assessment of Findings
+
+# Provide an overall assessment of the paper and its conclusions. Does
+
+# > the identification strategy support the authors' claims? For example,
+
+# > could the regression coefficients be credibly interpreted as causal
+
+# > effects if causal inference is the goal? Does the model adequately
+
+# > represent the real-world data-generating process? Does the data
+
+# > credibly measure the phenomena being studied?
+
+#
+
+# Answer 4:
+
+# The main conclusion is that conditions favoring insurgency—especially
+
+# > low income and weak states—predict civil war much better than ethnic
+
+# > or religious diversity does.
+
+# This conclusion is supported by their regressions, which show strong
+
+# > and robust effects for income, political instability, terrain, and
+
+# > population, while ethnic fractionalization becomes small and
+
+# > insignificant once those factors are controlled for.
+
+# Given their approach, I think the identification strategy supports
+
+# > their claims in a broad, qualitative sense.
+
+# It is still hard to treat the coefficients as precise causal effects,
+
+# > because we cannot rule out omitted variables or measurement error in
+
+# > the civil war data.
+
+# Overall, the model seems like a reasonable approximation to the data
+
+# > generating process, and the data are good by the standards of
+
+# > cross-national conflict research, but the results remain correlational
+
+# > rather than definitively causal.
+
+# Question 5: Broader Contribution
+
+# Despite any weaknesses, can this research still inform our
+
+# > understanding of the world? If so, how?
+
+#
+
+# Answer 5:
+
+# Even with its limitations, the paper makes an important contribution.
+
+# It shifts attention away from "ancient ethnic hatreds" and toward state
+
+# > weakness, poverty, and the logistics of insurgency as key drivers of
+
+# > civil war.
+
+# That change in focus has influenced a lot of later work and remains
+
+# > part of how scholars and policymakers think about internal conflict.
+
+# The paper also shows how careful large-N analysis can challenge
+
+# > popular stories that seem intuitive but do not hold up in the data.
+
+# So even if the identification is not perfect, the study still improves
+
+# > our understanding of civil wars by reframing what we should be
+
+# > looking at when we ask why some countries experience these conflicts.
+
+```
+
+
+
+```{r Part 2 Q1}
+# Question 1
+
+# Load the thermometers.csv data from the data folder on the github
+
+# > repo. Use the birth_year variable to create a new age variable
+
+# > (Note: This survey was taken in 2017).
+
+#
+
+# We load the data and create an age variable using birth_year.
+
+thermometers <- read.csv("/Users/santividal5/Desktop/R/thermometers.csv")
+
+thermometers$party_id <- factor(thermometers$party_id)
+thermometers$sex <- factor(thermometers$sex)
+thermometers$race <- factor(thermometers$race)
+thermometers$educ <- factor(thermometers$educ)
+
+thermometers$age <- 2017 - thermometers$birth_year
+
+head(thermometers[, c("birth_year", "age")])
+
+# This head() output lets me check that someone born in 1950 appears as
+
+# > age 67 in 2017, and so on, which confirms that age was computed
+
+# > correctly.
+```
+
+```{r Part 2 Q2}
+# Question 2
+
+# Pick one of the feeling thermometers and one of the categorical
+
+# > demographic variables (sex, race, party_id, or educ). Describe the
+
+# > spread and central tendency of the feeling thermometer both for all
+
+# > observations, and for each category in the demographic variable you
+
+# > chose. Use histograms or density plots to visualize the distribution.
+
+#
+
+# I use ft_immig (feelings toward immigrants) and party_id.
+
+summary(thermometers$ft_immig)
+
+sd(thermometers$ft_immig, na.rm = TRUE)
+
+# The summary shows the minimum, quartiles, median, mean, and maximum,
+
+# > and the standard deviation tells me that ratings are quite spread
+
+# > out, with many people giving very low or very high scores.
+
+by(
+thermometers$ft_immig,
+thermometers$party_id,
+summary
+)
+
+# This by() output shows the distribution for each party group.
+
+# Democrats tend to have higher average ratings toward immigrants,
+
+# > Republicans tend to have lower ratings, and Independents and other
+
+# > groups fall in between.
+
+party_means <- tapply(
+thermometers$ft_immig,
+thermometers$party_id,
+mean,
+na.rm = TRUE
+)
+
+party_sds <- tapply(
+thermometers$ft_immig,
+thermometers$party_id,
+sd,
+na.rm = TRUE
+)
+
+cbind(mean = party_means, sd = party_sds)
+
+# This small table makes it easy to compare average warmth and
+
+# > variability toward immigrants across the different party_id
+
+# > categories.
+
+```
+
+```{r Histograms}
+# Now we plot histograms for the feeling thermometer.
+
+hist(
+thermometers$ft_immig,
+main = "Feeling Thermometer toward Immigrants (All Respondents)",
+xlab = "Thermometer rating (0-100)"
+)
+
+par(mfrow = c(2, 3))
+
+for (p in levels(thermometers$party_id)) {
+hist(
+thermometers$ft_immig[thermometers$party_id == p],
+main = paste("Immigrant thermometer:", p),
+xlab = "Rating (0-100)",
+xlim = c(0, 100)
+)
+}
+
+par(mfrow = c(1, 1))
+
+# The overall histogram shows many scores around 50 and many near 100,
+
+# > with some very low values, which suggests polarization.
+
+# The separate histograms show that Democrats cluster more at high scores
+
+# > and Republicans have more low to mid-range scores, which matches the
+
+# > differences we saw in the summary statistics.
+
+```
+
+```{r Part 2 Q3}
+# Question 3
+
+# Fit a regression model to estimate the conditional mean of the
+
+# > feeling thermometer for each category in the demographic variable
+
+# > you chose.
+
+#
+
+# We regress ft_immig on party_id so each coefficient is a difference
+
+# > in group means relative to the baseline party.
+
+model1 <- lm(ft_immig ~ party_id, data = thermometers)
+
+summary(model1)
+
+# In this model the intercept is the average immigrant thermometer
+
+# > score for the baseline party (usually Democrats).
+
+# Each party_id coefficient tells us how much higher or lower that
+
+# > party's mean is compared to Democrats.
+
+# For example, the coefficient for Republicans is large and negative,
+
+# > which means Republicans score immigrants much lower on average than
+
+# > Democrats do.
+
+```
+
+```{r Part 2 Q4}
+# Question 4
+
+# Create a new dataframe that only contains rows for Democrats and
+
+# > Republicans. Create a new binary variable for party_id.
+
+#
+
+# We keep only Democrats and Republicans and then code Republican = 1
+
+# > and Democrat = 0.
+
+dr_data <- subset(
+thermometers,
+party_id %in% c("Democrat", "Republican")
+)
+
+dr_data$party_bin <- ifelse(dr_data$party_id == "Republican", 1, 0)
+
+table(dr_data$party_id, dr_data$party_bin)
+
+# This table lets me confirm that all Democrats are coded as 0 and all
+
+# > Republicans are coded as 1 in the new party_bin variable.
+
+```
+
+```{r Part 2 Q5}
+# Question 5
+
+# Use multiple linear regression to build a model that predicts your
+
+# > binary party_id variable. Use any combination of variables you like,
+
+# > but you should include at least one feeling thermometer and one
+
+# > interaction term. Justify your model.
+
+#
+
+# I include ft_immig (immigrants) and ft_police (police) plus their
+
+# > interaction. Immigration and law-and-order attitudes are both
+
+# > plausibly related to partisanship.
+
+model2 <- lm(party_bin ~ ft_immig * ft_police, data = dr_data)
+
+summary(model2)
+
+# The coefficient on ft_immig is negative, so higher warmth toward
+
+# > immigrants is associated with a lower probability of being
+
+# > Republican.
+
+# The coefficient on ft_police is positive, so higher warmth toward the
+
+# > police is associated with a higher probability of being Republican.
+
+# The interaction term is small and not statistically significant, so
+
+# > the effect of immigrant attitudes does not seem to change much as
+
+# > police attitudes change.
+
+# This simple linear probability model gives a reasonable summary of how
+
+# > these two issue attitudes are related to party identification in the
+
+# > data.
+
+```
+
+```{r Part 2 Q7}
+# Question 7
+
+# Select one of the feeling thermometers in your model and plot how
+
+# > your predicted values change as the feeling thermometer changes.
+
+# > Interpret your results. Can this reasonably be interpreted as a
+
+# > causal effect?
+
+#
+
+# We vary ft_immig from 0 to 100 and look at predicted probabilities
+
+# > when ft_police is 0, 50, or 100.
+
+immig_seq <- seq(0, 100, by = 1)
+
+new_low <- data.frame(
+ft_immig = immig_seq,
+ft_police = 0
+)
+
+new_mid <- data.frame(
+ft_immig = immig_seq,
+ft_police = 50
+)
+
+new_high <- data.frame(
+ft_immig = immig_seq,
+ft_police = 100
+)
+
+pred_low <- predict(model2, newdata = new_low)
+pred_mid <- predict(model2, newdata = new_mid)
+pred_high <- predict(model2, newdata = new_high)
+
+plot(
+immig_seq,
+pred_low,
+type = "l",
+ylim = c(0, 1),
+xlab = "Immigrant thermometer score",
+ylab = "Predicted Pr(Republican)",
+main = "Predicted probability of Republican ID"
+)
+
+lines(immig_seq, pred_mid, col = "blue")
+lines(immig_seq, pred_high, col = "red")
+
+legend(
+"topright",
+legend = c("Police = 0", "Police = 50", "Police = 100"),
+col = c("black", "blue", "red"),
+lty = 1,
+bty = "n"
+)
+
+# The three lines all slope downward, meaning that as warmth toward
+
+# > immigrants increases, the predicted probability of being Republican
+
+# > falls, regardless of how someone feels about the police.
+
+# The red line (police = 100) is highest at every point, which shows
+
+# > that people who feel very warmly toward the police are more likely
+
+# > to be Republican for any given level of immigrant warmth.
+
+# These patterns are associations from survey data, not guaranteed
+
+# > causal effects.
+
+# Party identification and these attitudes likely influence each other,
+
+# > and all of them are driven by deeper ideological and social factors,
+
+# > so we should be careful not to claim that changing the thermometer
+
+# > score would by itself cause someone to change parties.
+
+```
+

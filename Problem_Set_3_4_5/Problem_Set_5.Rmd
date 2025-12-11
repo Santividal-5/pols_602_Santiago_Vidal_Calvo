@@ -1,0 +1,298 @@
+---
+title: "Problem_Set_5"
+author: "Santiago Vidal Calvo"
+date: "2025-12-07"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Part 1}
+# Part 1: Simulation
+
+# Create a simulated data set with a dependent variable that is a linear
+
+# > function of a treatment variable and a confounding variable. Fit a
+
+# > linear model for the true data generating process and print the
+
+# > summary table.
+
+set.seed(123)
+
+n <- 5000
+
+# Confounder C
+
+C <- rnorm(n, mean = 0, sd = 1)
+
+# Treatment T depends on C
+
+Treated <- 0.8 * C + rnorm(n, 0, 1)
+
+# Outcome Y depends on T and C
+
+# True model: Y = 1 + 2*T + 1*C + error
+
+Y <- 1 + 2 * Treated + 1 * C + rnorm(n, 0, 1)
+
+sim_data <- data.frame(
+Y = Y,
+T = Treated,
+C = C
+)
+
+head(sim_data)
+
+# This data.frame contains the outcome Y, the treatment T, and the
+
+# > confounder C, all generated from the specified linear DGP.
+
+```
+
+```{r}
+# Fit the true model Y ~ T + C and print the summary table
+
+mod_true <- lm(Y ~ T + C, data = sim_data)
+summary(mod_true)
+
+# In this model, the true coefficient on T is 2 by construction and the
+
+# > true coefficient on C is 1. The estimated coefficients should be
+
+# > close to these values, and the summary output gives us the standard
+
+# > errors and t statistics for each estimate.
+```
+
+```{r}
+# Part 1(a)
+
+# Using the true model, demonstrate that the coefficient for your
+
+# > treatment variable follows the central limit theorem. That is,
+
+# > demonstrate that the coefficient's sampling distribution is
+
+# > approximately normal.
+
+set.seed(456)
+
+B <- 1000          # number of simulated datasets
+beta_T <- numeric(B)
+
+for (b in seq_len(B)) {
+C_b <- rnorm(n, 0, 1)
+T_b <- 0.8 * C_b + rnorm(n, 0, 1)
+Y_b <- 1 + 2 * T_b + 1 * C_b + rnorm(n, 0, 1)
+dat_b <- data.frame(Y = Y_b, T = T_b, C = C_b)
+fit_b <- lm(Y ~ T + C, data = dat_b)
+beta_T[b] <- coef(fit_b)["T"]
+}
+
+# Look at the mean and standard deviation of the sampled coefficients
+
+mean(beta_T)
+sd(beta_T)
+
+# Plot a histogram of the sampling distribution of the T coefficient
+
+hist(
+beta_T,
+breaks = 30,
+main = "Sampling distribution of T coefficient (true model)",
+xlab = "Estimated beta_T"
+)
+
+# By the central limit theorem, the sampling distribution of the T
+
+# > coefficient should be approximately normal when we repeatedly
+
+# > sample large datasets from the same DGP.
+
+# The histogram looks bell-shaped and centered near the true value of
+
+# > 2, and the mean(beta_T) is very close to 2, which supports the CLT
+
+# > intuition for this regression coefficient.
+
+```
+
+```{r}
+# Part 1(b)
+
+# Compute the bootstrapped standard error for the coefficient of the
+
+# > treatment variable.
+
+set.seed(789)
+
+B_boot <- 1000
+beta_boot <- numeric(B_boot)
+
+# We bootstrap the original simulated dataset sim_data
+
+for (b in seq_len(B_boot)) {
+idx <- sample(seq_len(n), size = n, replace = TRUE)
+boot_dat <- sim_data[idx, ]
+fit_boot <- lm(Y ~ T + C, data = boot_dat)
+beta_boot[b] <- coef(fit_boot)["T"]
+}
+
+boot_se <- sd(beta_boot)
+boot_se
+
+# Compare to the model-based standard error from the original model
+
+se_model <- summary(mod_true)$coef["T", "Std. Error"]
+se_model
+
+# The bootstrap standard error boot_se is very close to the analytic
+
+# > standard error se_model from the regression output.
+
+# This shows that the model-based SE is doing a good job approximating
+
+# > the true sampling variability of the T coefficient under this DGP.
+
+```
+
+```{r Part 2}
+# Part 2: Data Analysis
+
+# For this part of the assignment, use any data set you like.
+
+# > Here I follow the instruction to use the thermometers data from
+
+# > class (thermometers.csv).
+
+thermo <- read.csv("/Users/santividal5/Desktop/R/thermometers.csv")
+
+thermo$party_id <- factor(thermo$party_id)
+thermo$sex <- factor(thermo$sex)
+thermo$race <- factor(thermo$race)
+thermo$educ <- factor(thermo$educ)
+
+head(thermo)
+
+# This confirms that the thermometer data loaded correctly and that the
+
+# > main variables (party_id and thermometer scores) are present.
+
+```
+
+```{r}
+# Part 2(a)
+
+# Conduct a hypothesis test for a difference in means. You decide what
+
+# > the hypotheses are, whether you use a t-test or a z-test, and what
+
+# > the level of significance is. Explain your decisions, and interpret
+
+# > your results both substantively and statistically.
+
+#
+
+# I test whether Democrats and Republicans differ in their mean feeling
+
+# > thermometer toward immigrants (ft_immig).
+
+# I use a two-sample t-test with unequal variances and a 5% significance
+
+# > level, which is standard in this setting.
+
+# Keep only Democrats and Republicans
+
+thermo_DR <- subset(thermo, party_id %in% c("Democrat", "Republican"))
+
+tapply(
+thermo_DR$ft_immig,
+thermo_DR$party_id,
+mean,
+na.rm = TRUE
+)
+
+t.test(
+ft_immig ~ party_id,
+data = thermo_DR
+)
+
+# Interpretation:
+
+# The t-test output shows the estimated difference in means, a t
+
+# > statistic, and a p-value.
+
+# The mean ft_immig for Democrats is substantially higher than for
+
+# > Republicans, and the p-value is effectively zero at the 5% level.
+
+# Statistically, we reject the null hypothesis that Democrats and
+
+# > Republicans have the same average warmth toward immigrants.
+
+# Substantively, this suggests that in this survey Democrats feel
+
+# > noticeably warmer toward immigrants than Republicans do.
+
+```
+
+```{r}
+# Part 2(b)
+
+# Using the same data, fit a linear model. Interpret the coefficient,
+
+# > standard error, t-value, and p-value.
+
+#
+
+# I fit a simple linear model where the dependent variable is ft_immig
+
+# > and the predictor is party_id (with Democrats as the baseline).
+
+mod_party <- lm(ft_immig ~ party_id, data = thermo_DR)
+summary(mod_party)
+
+# Interpretation of key pieces:
+
+# - The intercept is the estimated mean ft_immig for Democrats (the
+
+# > baseline category).
+
+# - The coefficient on party_idRepublican is the estimated difference
+
+# > in means between Republicans and Democrats.
+
+# It is negative and large in magnitude, which means Republicans give
+
+# > lower immigrant thermometer scores on average.
+
+# - The standard error for this coefficient measures how much that
+
+# > estimated difference would vary across repeated samples.
+
+# - The t-value is the estimated coefficient divided by its standard
+
+# > error; a large absolute t-value indicates strong evidence that the
+
+# > true difference is not zero.
+
+# - The p-value associated with the t-value is extremely small, so we
+
+# > reject the null hypothesis that Democrats and Republicans have
+
+# > equal mean ft_immig scores.
+
+# Substantively, this matches the two-sample t-test: party ID is strongly
+
+# > associated with how warmly respondents feel toward immigrants, with
+
+# > Democrats rating immigrants much more positively than Republicans.
+
+```
+
